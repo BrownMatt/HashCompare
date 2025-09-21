@@ -6,6 +6,25 @@
         xmlns:local="clr-namespace:HashCompare"
         mc:Ignorable="d"
         Title="Hash Compare" Height="600" Width="1000">
+    <Window.Resources>
+        <!-- Style for DataGrid rows based on Status -->
+        <Style x:Key="RowStyle" TargetType="DataGridRow">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="New">
+                    <Setter Property="Background" Value="#A5D6A7"/>  <!-- Light Green -->
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Missing">
+                    <Setter Property="Background" Value="#EF9A9A"/>  <!-- Light Red -->
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Different">
+                    <Setter Property="Background" Value="#FFF59D"/>  <!-- Light Yellow -->
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Identical">
+                    <Setter Property="Background" Value="White"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -51,10 +70,29 @@
             <CheckBox x:Name="chkDifferent" Content="Different" Margin="5,0" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
             <CheckBox x:Name="chkMissing" Content="Missing" Margin="5,0" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
             <CheckBox x:Name="chkNew" Content="New" Margin="5,0" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
+            
+            <!-- Color Legend -->
+            <Border BorderThickness="0 0 0 1" BorderBrush="Gray" Margin="20,0,0,0" Padding="5,0,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Legend: " FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <Border Width="16" Height="16" Background="#A5D6A7" Margin="5,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="New" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    
+                    <Border Width="16" Height="16" Background="#EF9A9A" Margin="5,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Missing" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    
+                    <Border Width="16" Height="16" Background="#FFF59D" Margin="5,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Different" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    
+                    <Border Width="16" Height="16" Background="White" BorderBrush="Gray" BorderThickness="1" Margin="5,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Identical" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
         </StackPanel>
 
         <DataGrid x:Name="dgResults" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True" 
-                  AlternatingRowBackground="AliceBlue" 
+                  AlternatingRowBackground="{x:Null}"
+                  RowStyle="{StaticResource RowStyle}"
                   Margin="0,5,0,0">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="File Path" Binding="{Binding FilePath}" Width="*"/>
