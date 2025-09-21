@@ -1,267 +1,248 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using WinForms = System.Windows.Forms;
 
-namespace HashCompare
+namespace HashCompare;
+
+/// <summary>
+/// Interaction logic for MainWindow.xaml
+/// </summary>
+// ReSharper disable once UnusedMember.Global
+public partial class MainWindow
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
+    private readonly ObservableCollection<FileComparisonResult> _comparisonResults = [];
+    private readonly ICollectionView _resultsView;
+
+    public MainWindow()
     {
-        private ObservableCollection<FileComparisonResult> _comparisonResults = new();
-        private ICollectionView _resultsView;
-
-        public MainWindow()
-        {
-            InitializeComponent();
+        InitializeComponent();
             
-            // Configure the collection view for filtering
-            _resultsView = CollectionViewSource.GetDefaultView(_comparisonResults);
-            _resultsView.Filter = FilterResults;
-            dgResults.ItemsSource = _resultsView;
+        // Configure the collection view for filtering
+        _resultsView = CollectionViewSource.GetDefaultView(_comparisonResults);
+        _resultsView.Filter = FilterResults;
+        DgResults.ItemsSource = _resultsView;
             
-            // By default, "Identical" files are not shown
-            chkIdentical.IsChecked = false;
+        // By default, "Identical" files are not shown
+        ChkIdentical.IsChecked = false;
+    }
+
+    private void btnSourceFolder_Click(object sender, RoutedEventArgs e)
+    {
+        using var dialog = new FolderBrowserDialog();
+        dialog.Description = "Select source folder";
+
+        if (dialog.ShowDialog() == WinForms.DialogResult.OK)
+        {
+            TxtSourceFolder.Text = dialog.SelectedPath;
+        }
+    }
+
+    private void btnTargetFolder_Click(object sender, RoutedEventArgs e)
+    {
+        using var dialog = new FolderBrowserDialog();
+        dialog.Description = "Select target folder";
+
+        if (dialog.ShowDialog() == WinForms.DialogResult.OK)
+        {
+            TxtTargetFolder.Text = dialog.SelectedPath;
+        }
+    }
+
+    private void btnCompare_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(TxtSourceFolder.Text) || string.IsNullOrEmpty(TxtTargetFolder.Text))
+        {
+            System.Windows.MessageBox.Show("Please select both source and target folders.", "Missing Folders", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
         }
 
-        private void btnSourceFolder_Click(object sender, RoutedEventArgs e)
+        try
         {
-            using var dialog = new WinForms.FolderBrowserDialog
-            {
-                Description = "Select source folder"
-            };
-
-            if (dialog.ShowDialog() == WinForms.DialogResult.OK)
-            {
-                txtSourceFolder.Text = dialog.SelectedPath;
-            }
+            CompareDirectories(TxtSourceFolder.Text, TxtTargetFolder.Text);
         }
-
-        private void btnTargetFolder_Click(object sender, RoutedEventArgs e)
+        catch (Exception ex)
         {
-            using var dialog = new WinForms.FolderBrowserDialog
-            {
-                Description = "Select target folder"
-            };
-
-            if (dialog.ShowDialog() == WinForms.DialogResult.OK)
-            {
-                txtTargetFolder.Text = dialog.SelectedPath;
-            }
+            System.Windows.MessageBox.Show($"Error during comparison: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
 
-        private void btnCompare_Click(object sender, RoutedEventArgs e)
+    private void CompareDirectories(string sourceDir, string targetDir)
+    {
+        Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
+        _comparisonResults.Clear();
+
+        try
         {
-            if (string.IsNullOrEmpty(txtSourceFolder.Text) || string.IsNullOrEmpty(txtTargetFolder.Text))
+            // Get all files in source directory (including subdirectories)
+            var sourceFiles = Directory.GetFiles(sourceDir, "*.*", SearchOption.AllDirectories)
+                .Select(f => f.Substring(sourceDir.Length).TrimStart('\\', '/'))
+                .ToList();
+
+            // Get all files in target directory
+            var targetFiles = Directory.GetFiles(targetDir, "*.*", SearchOption.AllDirectories)
+                .Select(f => f.Substring(targetDir.Length).TrimStart('\\', '/'))
+                .ToHashSet();
+
+            // Compare each source file
+            foreach (var relativePath in sourceFiles)
             {
-                System.Windows.MessageBox.Show("Please select both source and target folders.", "Missing Folders", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+                var sourceFilePath = Path.Combine(sourceDir, relativePath);
+                var targetFilePath = Path.Combine(targetDir, relativePath);
 
-            try
-            {
-                CompareDirectories(txtSourceFolder.Text, txtTargetFolder.Text);
-            }
-            catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show($"Error during comparison: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void CompareDirectories(string sourceDir, string targetDir)
-        {
-            Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait;
-            _comparisonResults.Clear();
-
-            try
-            {
-                // Get all files in source directory (including subdirectories)
-                var sourceFiles = Directory.GetFiles(sourceDir, "*.*", SearchOption.AllDirectories)
-                    .Select(f => f.Substring(sourceDir.Length).TrimStart('\\', '/'))
-                    .ToList();
-
-                // Get all files in target directory
-                var targetFiles = Directory.GetFiles(targetDir, "*.*", SearchOption.AllDirectories)
-                    .Select(f => f.Substring(targetDir.Length).TrimStart('\\', '/'))
-                    .ToHashSet();
-
-                // Compare each source file
-                foreach (var relativePath in sourceFiles)
-                {
-                    string sourceFilePath = System.IO.Path.Combine(sourceDir, relativePath);
-                    string targetFilePath = System.IO.Path.Combine(targetDir, relativePath);
-
-                    var result = new FileComparisonResult
+                var crc32Source = CalculateCrc32(sourceFilePath);
+                var sha256Source = CalculateSha256(sourceFilePath);
+                var targetExists = File.Exists(targetFilePath);
+                var crc32Target = targetExists ? CalculateCrc32(targetFilePath) : string.Empty;
+                var sha256Target = targetExists ? CalculateSha256(targetFilePath) : string.Empty;
+                var status = (
+                        TargetExists: targetExists,
+                        CrcEquality: crc32Source == crc32Target,
+                        Sha256Equality: sha256Source == sha256Target) switch
                     {
-                        FilePath = relativePath
+                        (TargetExists: false, _, _) => "Missing",
+                        (_, CrcEquality: true, Sha256Equality: true) => "Identical",
+                        _ => "Different"
                     };
 
+                var result = new FileComparisonResult
+                {
+                    FilePath = relativePath,
                     // Compute source hashes
-                    result.CRC32Source = CalculateCRC32(sourceFilePath);
-                    result.SHA256Source = CalculateSHA256(sourceFilePath);
+                    Crc32Source = CalculateCrc32(sourceFilePath),
+                    Sha256Source = CalculateSha256(sourceFilePath),
+                    Crc32Target = crc32Target,
+                    Sha256Target = sha256Target,
+                    Status = status
+                };
 
-                    // Check if file exists in target
-                    if (targetFiles.Contains(relativePath))
+                _comparisonResults.Add(result);
+            }
+
+            // Find files in target that don't exist in source
+            var sourceFileSet = new HashSet<string>(sourceFiles);
+            foreach (var relativePath in targetFiles)
+            {
+                if (!sourceFileSet.Contains(relativePath))
+                {
+                    var targetFilePath = Path.Combine(targetDir, relativePath);
+                    var result = new FileComparisonResult
                     {
-                        // Calculate target hashes
-                        result.CRC32Target = CalculateCRC32(targetFilePath);
-                        result.SHA256Target = CalculateSHA256(targetFilePath);
-
-                        // Compare hashes
-                        if (result.CRC32Source == result.CRC32Target && 
-                            result.SHA256Source == result.SHA256Target)
-                        {
-                            result.Status = "Identical";
-                        }
-                        else
-                        {
-                            result.Status = "Different";
-                        }
-                    }
-                    else
-                    {
-                        result.Status = "Missing";
-                    }
-
+                        FilePath = relativePath,
+                        Status = "New",
+                        Crc32Source = string.Empty,
+                        Sha256Source = string.Empty,
+                        Crc32Target = CalculateCrc32(targetFilePath),
+                        Sha256Target = CalculateSha256(targetFilePath)
+                    };
                     _comparisonResults.Add(result);
                 }
-
-                // Find files in target that don't exist in source
-                var sourceFileSet = new HashSet<string>(sourceFiles);
-                foreach (var relativePath in targetFiles)
-                {
-                    if (!sourceFileSet.Contains(relativePath))
-                    {
-                        string targetFilePath = System.IO.Path.Combine(targetDir, relativePath);
-                        var result = new FileComparisonResult
-                        {
-                            FilePath = relativePath,
-                            Status = "New",
-                            CRC32Target = CalculateCRC32(targetFilePath),
-                            SHA256Target = CalculateSHA256(targetFilePath)
-                        };
-                        _comparisonResults.Add(result);
-                    }
-                }
+            }
                 
-                // Apply the filter
-                _resultsView.Refresh();
-            }
-            finally
-            {
-                Mouse.OverrideCursor = null;
-            }
+            // Apply the filter
+            _resultsView.Refresh();
         }
-
-        private string CalculateCRC32(string filePath)
+        finally
         {
-            using var crc32 = new Crc32();
-            using var stream = File.OpenRead(filePath);
-            byte[] hash = crc32.ComputeHash(stream);
-            return BitConverter.ToString(hash).Replace("-", "");
-        }
-
-        private string CalculateSHA256(string filePath)
-        {
-            using var sha256 = SHA256.Create();
-            using var stream = File.OpenRead(filePath);
-            byte[] hash = sha256.ComputeHash(stream);
-            return BitConverter.ToString(hash).Replace("-", "");
-        }
-
-        private bool FilterResults(object item)
-        {
-            if (item is FileComparisonResult result)
-            {
-                switch (result.Status)
-                {
-                    case "Identical":
-                        return chkIdentical.IsChecked ?? false;
-                    case "Different":
-                        return chkDifferent.IsChecked ?? true;
-                    case "Missing":
-                        return chkMissing.IsChecked ?? true;
-                    case "New":
-                        return chkNew.IsChecked ?? true;
-                    default:
-                        return true;
-                }
-            }
-            return true;
-        }
-
-        private void FilterCheckBox_Changed(object sender, RoutedEventArgs e)
-        {
-            _resultsView?.Refresh();
+            Mouse.OverrideCursor = null;
         }
     }
 
-    public class FileComparisonResult
+    private static string CalculateCrc32(string filePath)
     {
-        public string FilePath { get; set; }
-        public string Status { get; set; }
-        public string CRC32Source { get; set; }
-        public string CRC32Target { get; set; }
-        public string SHA256Source { get; set; }
-        public string SHA256Target { get; set; }
+        using var crc32 = new Crc32();
+        using var stream = File.OpenRead(filePath);
+        var hash = crc32.ComputeHash(stream);
+        return BitConverter.ToString(hash).Replace("-", "");
     }
 
-    // CRC32 implementation (SHA256 is built-in)
-    public class Crc32 : HashAlgorithm
+    private static string CalculateSha256(string filePath)
     {
-        private uint _crc32 = 0xFFFFFFFF;
-        private readonly uint[] _crc32Table;
+        using var sha256 = SHA256.Create();
+        using var stream = File.OpenRead(filePath);
+        var hash = sha256.ComputeHash(stream);
+        return BitConverter.ToString(hash).Replace("-", "");
+    }
 
-        public Crc32()
+    private bool FilterResults(object item)
+    {
+        if (item is FileComparisonResult result)
         {
-            _crc32Table = new uint[256];
-            for (uint i = 0; i < 256; i++)
+            return result.Status switch
             {
-                uint crc = i;
-                for (int j = 0; j < 8; j++)
-                {
-                    crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320 : crc >> 1;
-                }
-                _crc32Table[i] = crc;
+                "Identical" => ChkIdentical.IsChecked ?? false,
+                "Different" => ChkDifferent.IsChecked ?? true,
+                "Missing" => ChkMissing.IsChecked ?? true,
+                "New" => ChkNew.IsChecked ?? true,
+                _ => true
+            };
+        }
+        return true;
+    }
+
+    private void FilterCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+        _resultsView?.Refresh();
+    }
+}
+
+public class FileComparisonResult
+{
+    // ReSharper disable UnusedAutoPropertyAccessor.Global
+    // get is used by WPF binding
+    public required string FilePath { get; init; }
+    public required string Status { get; init; }
+    public required string Crc32Source { get; init; }
+    public required string Crc32Target { get; init; }
+    public required string Sha256Source { get; init; }
+    public required string Sha256Target { get; init; }
+    // ReSharper restore UnusedAutoPropertyAccessor.Global
+}
+
+// CRC32 implementation (SHA256 is built-in)
+public class Crc32 : HashAlgorithm
+{
+    private uint _crc32 = 0xFFFFFFFF;
+    private readonly uint[] _crc32Table;
+
+    public Crc32()
+    {
+        _crc32Table = new uint[256];
+        for (uint i = 0; i < 256; i++)
+        {
+            var crc = i;
+            for (var j = 0; j < 8; j++)
+            {
+                crc = (crc & 1) != 0 ? (crc >> 1) ^ 0xEDB88320 : crc >> 1;
             }
+            _crc32Table[i] = crc;
+        }
             
-            Initialize();
-        }
+        Initialize();
+    }
 
-        public override void Initialize()
-        {
-            _crc32 = 0xFFFFFFFF;
-        }
+    public sealed override void Initialize()
+    {
+        _crc32 = 0xFFFFFFFF;
+    }
 
-        protected override void HashCore(byte[] buffer, int offset, int count)
+    protected override void HashCore(byte[] buffer, int offset, int count)
+    {
+        for (var i = offset; i < offset + count; i++)
         {
-            for (int i = offset; i < offset + count; i++)
-            {
-                _crc32 = (_crc32 >> 8) ^ _crc32Table[buffer[i] ^ (_crc32 & 0x000000FF)];
-            }
+            _crc32 = (_crc32 >> 8) ^ _crc32Table[buffer[i] ^ (_crc32 & 0x000000FF)];
         }
+    }
 
-        protected override byte[] HashFinal()
-        {
-            byte[] hash = BitConverter.GetBytes(~_crc32);
-            Array.Reverse(hash);
-            return hash;
-        }
+    protected override byte[] HashFinal()
+    {
+        var hash = BitConverter.GetBytes(~_crc32);
+        Array.Reverse(hash);
+        return hash;
     }
 }

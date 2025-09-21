@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:HashCompare"
         mc:Ignorable="d"
         Title="Hash Compare" Height="600" Width="1000">
     <Window.Resources>
@@ -44,8 +43,8 @@
             <StackPanel Grid.Column="0" Margin="0,0,5,0">
                 <TextBlock Text="Source Folder:" Margin="0,0,0,5"/>
                 <DockPanel>
-                    <Button x:Name="btnSourceFolder" Content="Browse..." DockPanel.Dock="Right" Width="80" Click="btnSourceFolder_Click"/>
-                    <TextBox x:Name="txtSourceFolder" IsReadOnly="True"/>
+                    <Button x:Name="BtnSourceFolder" Content="Browse..." DockPanel.Dock="Right" Width="80" Click="btnSourceFolder_Click"/>
+                    <TextBox x:Name="TxtSourceFolder" IsReadOnly="True"/>
                 </DockPanel>
             </StackPanel>
             
@@ -55,21 +54,21 @@
             <StackPanel Grid.Column="2" Margin="5,0,0,0">
                 <TextBlock Text="Target Folder:" Margin="0,0,0,5"/>
                 <DockPanel>
-                    <Button x:Name="btnTargetFolder" Content="Browse..." DockPanel.Dock="Right" Width="80" Click="btnTargetFolder_Click"/>
-                    <TextBox x:Name="txtTargetFolder" IsReadOnly="True"/>
+                    <Button x:Name="BtnTargetFolder" Content="Browse..." DockPanel.Dock="Right" Width="80" Click="btnTargetFolder_Click"/>
+                    <TextBox x:Name="TxtTargetFolder" IsReadOnly="True"/>
                 </DockPanel>
             </StackPanel>
         </Grid>
 
-        <Button x:Name="btnCompare" Grid.Row="1" Content="Compare Folders" Margin="0,10" Padding="5" Click="btnCompare_Click" HorizontalAlignment="Center"/>
+        <Button x:Name="BtnCompare" Grid.Row="1" Content="Compare Folders" Margin="0,10" Padding="5" Click="btnCompare_Click" HorizontalAlignment="Center"/>
 
         <!-- Filter Controls -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,5,0,10" HorizontalAlignment="Left">
             <TextBlock Text="Filter by Status:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
-            <CheckBox x:Name="chkIdentical" Content="Identical" Margin="5,0" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
-            <CheckBox x:Name="chkDifferent" Content="Different" Margin="5,0" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
-            <CheckBox x:Name="chkMissing" Content="Missing" Margin="5,0" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
-            <CheckBox x:Name="chkNew" Content="New" Margin="5,0" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
+            <CheckBox x:Name="ChkIdentical" Content="Identical" Margin="5,0" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
+            <CheckBox x:Name="ChkDifferent" Content="Different" Margin="5,0" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
+            <CheckBox x:Name="ChkMissing" Content="Missing" Margin="5,0" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
+            <CheckBox x:Name="ChkNew" Content="New" Margin="5,0" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
             
             <!-- Color Legend -->
             <Border BorderThickness="0 0 0 1" BorderBrush="Gray" Margin="20,0,0,0" Padding="5,0,0,0">
@@ -90,17 +89,17 @@
             </Border>
         </StackPanel>
 
-        <DataGrid x:Name="dgResults" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True" 
+        <DataGrid x:Name="DgResults" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True" 
                   AlternatingRowBackground="{x:Null}"
                   RowStyle="{StaticResource RowStyle}"
                   Margin="0,5,0,0">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="File Path" Binding="{Binding FilePath}" Width="*"/>
                 <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100"/>
-                <DataGridTextColumn Header="CRC32 Source" Binding="{Binding CRC32Source}" Width="120"/>
-                <DataGridTextColumn Header="CRC32 Target" Binding="{Binding CRC32Target}" Width="120"/>
-                <DataGridTextColumn Header="SHA256 Source" Binding="{Binding SHA256Source}" Width="300"/>
-                <DataGridTextColumn Header="SHA256 Target" Binding="{Binding SHA256Target}" Width="300"/>
+                <DataGridTextColumn Header="CRC32 Source" Binding="{Binding Crc32Source}" Width="120"/>
+                <DataGridTextColumn Header="CRC32 Target" Binding="{Binding Crc32Target}" Width="120"/>
+                <DataGridTextColumn Header="SHA256 Source" Binding="{Binding Sha256Source}" Width="300"/>
+                <DataGridTextColumn Header="SHA256 Target" Binding="{Binding Sha256Target}" Width="300"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>
