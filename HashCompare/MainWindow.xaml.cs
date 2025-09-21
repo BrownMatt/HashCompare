@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -24,11 +25,19 @@ namespace HashCompare
     public partial class MainWindow : Window
     {
         private ObservableCollection<FileComparisonResult> _comparisonResults = new();
+        private ICollectionView _resultsView;
 
         public MainWindow()
         {
             InitializeComponent();
-            dgResults.ItemsSource = _comparisonResults;
+            
+            // Configure the collection view for filtering
+            _resultsView = CollectionViewSource.GetDefaultView(_comparisonResults);
+            _resultsView.Filter = FilterResults;
+            dgResults.ItemsSource = _resultsView;
+            
+            // By default, "Identical" files are not shown
+            chkIdentical.IsChecked = false;
         }
 
         private void btnSourceFolder_Click(object sender, RoutedEventArgs e)
@@ -150,6 +159,9 @@ namespace HashCompare
                         _comparisonResults.Add(result);
                     }
                 }
+                
+                // Apply the filter
+                _resultsView.Refresh();
             }
             finally
             {
@@ -171,6 +183,32 @@ namespace HashCompare
             using var stream = File.OpenRead(filePath);
             byte[] hash = sha256.ComputeHash(stream);
             return BitConverter.ToString(hash).Replace("-", "");
+        }
+
+        private bool FilterResults(object item)
+        {
+            if (item is FileComparisonResult result)
+            {
+                switch (result.Status)
+                {
+                    case "Identical":
+                        return chkIdentical.IsChecked ?? false;
+                    case "Different":
+                        return chkDifferent.IsChecked ?? true;
+                    case "Missing":
+                        return chkMissing.IsChecked ?? true;
+                    case "New":
+                        return chkNew.IsChecked ?? true;
+                    default:
+                        return true;
+                }
+            }
+            return true;
+        }
+
+        private void FilterCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            _resultsView?.Refresh();
         }
     }
 
