@@ -33,6 +33,14 @@ public partial class MainWindow
 
         _config = ConfigService.Load();
         RefreshSourceHistory();
+
+        // Pre-fill the folders used in the most recent comparison.
+        var lastUsed = _config.FolderSets.FirstOrDefault();
+        if (lastUsed != null)
+        {
+            CmbSourceFolder.Text = lastUsed.Source;
+            TxtDestFolder.Text = lastUsed.Destination;
+        }
     }
 
     // ----- Folder selection -----
