@@ -1,0 +1,56 @@
+<Window x:Class="HashCompare.ConfigWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Configuration" Height="580" Width="640"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>   <!-- 0 diff tool label -->
+            <RowDefinition Height="Auto"/>   <!-- 1 diff tool path -->
+            <RowDefinition Height="Auto"/>   <!-- 2 diff args label -->
+            <RowDefinition Height="Auto"/>   <!-- 3 diff args -->
+            <RowDefinition Height="Auto"/>   <!-- 4 separator -->
+            <RowDefinition Height="Auto"/>   <!-- 5 scan folders button -->
+            <RowDefinition Height="Auto"/>   <!-- 6 exclude folders label -->
+            <RowDefinition Height="*"/>      <!-- 7 exclude folders text -->
+            <RowDefinition Height="Auto"/>   <!-- 8 scan files button -->
+            <RowDefinition Height="Auto"/>   <!-- 9 exclude files label -->
+            <RowDefinition Height="*"/>      <!-- 10 exclude files text -->
+            <RowDefinition Height="Auto"/>   <!-- 11 OK / Cancel -->
+        </Grid.RowDefinitions>
+
+        <!-- Diff tool -->
+        <TextBlock Grid.Row="0" TextWrapping="Wrap" Margin="0,0,0,4"
+                   Text="Diff tool (used by the row &quot;Compare&quot; action; leave blank to auto-detect WinMerge / VS Code):"/>
+        <DockPanel Grid.Row="1">
+            <Button Content="Browse..." DockPanel.Dock="Right" Width="80" Margin="6,0,0,0" Click="BrowseDiffTool_Click"/>
+            <TextBox x:Name="TxtDiffToolPath"/>
+        </DockPanel>
+        <TextBlock Grid.Row="2" Margin="0,8,0,4"
+                   Text="Diff tool arguments ({left} and {right} are replaced with the file paths):"/>
+        <TextBox Grid.Row="3" x:Name="TxtDiffToolArguments"/>
+
+        <Separator Grid.Row="4" Margin="0,14,0,8"/>
+
+        <!-- Exclude folders -->
+        <Button Grid.Row="5" Content="Scan..." Width="90" HorizontalAlignment="Left" Click="ScanFolders_Click"/>
+        <TextBlock Grid.Row="6" Margin="0,6,0,4"
+                   Text="Exclude folders (semicolon-delimited, wildcards allowed):"/>
+        <TextBox Grid.Row="7" x:Name="TxtExcludeFolders" AcceptsReturn="True"
+                 TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" MinHeight="80"/>
+
+        <!-- Exclude files -->
+        <Button Grid.Row="8" Content="Scan..." Width="90" HorizontalAlignment="Left"
+                Margin="0,14,0,0" Click="ScanFiles_Click"/>
+        <TextBlock Grid.Row="9" Margin="0,6,0,4"
+                   Text="Exclude files (extensions or name patterns, semicolon-delimited):"/>
+        <TextBox Grid.Row="10" x:Name="TxtExcludeFiles" AcceptsReturn="True"
+                 TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" MinHeight="80"/>
+
+        <!-- Dialog buttons -->
+        <StackPanel Grid.Row="11" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="OK" Width="80" Margin="0,0,8,0" IsDefault="True" Click="Ok_Click"/>
+            <Button Content="Cancel" Width="80" IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</Window>
