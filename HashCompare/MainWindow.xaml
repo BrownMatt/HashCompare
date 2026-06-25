@@ -43,7 +43,11 @@
 
             <!-- Source Folder Selection (editable history dropdown + Browse) -->
             <StackPanel Grid.Column="0" Margin="0,0,5,0">
-                <TextBlock Text="Source Folder:" Margin="0,0,0,5"/>
+                <DockPanel Margin="0,0,0,5">
+                    <Button x:Name="BtnSwapFolders" Content="Swap folders" DockPanel.Dock="Right" Width="90"
+                            Click="btnSwapFolders_Click"/>
+                    <TextBlock Text="Source Folder:" VerticalAlignment="Center"/>
+                </DockPanel>
                 <DockPanel>
                     <Button x:Name="BtnSourceFolder" Content="Browse..." DockPanel.Dock="Right" Width="80" Click="btnSourceFolder_Click"/>
                     <ComboBox x:Name="CmbSourceFolder" IsEditable="True" IsTextSearchEnabled="False"

@@ -59,6 +59,12 @@ public partial class MainWindow
             TxtDestFolder.Text = dialog.SelectedPath;
     }
 
+    /// <summary>Swaps the source and destination folder paths.</summary>
+    private void btnSwapFolders_Click(object sender, RoutedEventArgs e)
+    {
+        (CmbSourceFolder.Text, TxtDestFolder.Text) = (TxtDestFolder.Text, CmbSourceFolder.Text);
+    }
+
     /// <summary>Picking a remembered source folder auto-fills its matching destination.</summary>
     private void CmbSourceFolder_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
