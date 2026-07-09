@@ -143,6 +143,7 @@ public partial class MainWindow
             foreach (var result in results)
                 _comparisonResults.Add(result);
             _resultsView.Refresh();
+            UpdateStatusCounts();
         }
         catch (Exception ex)
         {
@@ -288,6 +289,7 @@ public partial class MainWindow
             CopyOver(result.SourceFullPath, result.DestFullPath);
             result.Status = "Identical";
             _resultsView.Refresh();
+            UpdateStatusCounts();
         }
         catch (Exception ex)
         {
@@ -305,6 +307,7 @@ public partial class MainWindow
             CopyOver(result.SourceFullPath, result.DestFullPath);
             result.Status = "Identical";
             _resultsView.Refresh();
+            UpdateStatusCounts();
         }
         catch (Exception ex)
         {
@@ -325,6 +328,7 @@ public partial class MainWindow
         {
             File.Delete(result.DestFullPath);
             _comparisonResults.Remove(result);
+            UpdateStatusCounts();
         }
         catch (Exception ex)
         {
@@ -426,5 +430,23 @@ public partial class MainWindow
     {
         // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
         _resultsView?.Refresh();
+    }
+
+    /// <summary>
+    /// Refreshes the per-status totals shown above each filter checkbox. Counts reflect all
+    /// comparison results regardless of the active filter, so hiding a status doesn't zero it out.
+    /// </summary>
+    private void UpdateStatusCounts()
+    {
+        var counts = _comparisonResults
+            .GroupBy(r => r.Status)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        int Count(string status) => counts.TryGetValue(status, out var n) ? n : 0;
+
+        TxtCountIdentical.Text = Count("Identical").ToString();
+        TxtCountDifferent.Text = Count("Different").ToString();
+        TxtCountMissing.Text = Count("Missing").ToString();
+        TxtCountNew.Text = Count("New").ToString();
     }
 }
