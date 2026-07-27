@@ -8,8 +8,9 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-        <!-- Style for DataGrid rows based on Status -->
-        <Style x:Key="RowStyle" TargetType="DataGridRow">
+        <!-- Only the Status cell is colored, based on its value -->
+        <Style x:Key="StatusCellStyle" TargetType="DataGridCell">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Status}" Value="New">
                     <Setter Property="Background" Value="#A5D6A7"/>  <!-- Light Green -->
@@ -24,6 +25,17 @@
                     <Setter Property="Background" Value="White"/>
                 </DataTrigger>
             </Style.Triggers>
+        </Style>
+
+        <!-- Bold, slightly indented text for the Folder column (easier to read) -->
+        <Style x:Key="FolderCellText" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="8,0,0,0"/>
+        </Style>
+
+        <!-- Bold text for the File column -->
+        <Style x:Key="FileCellText" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold"/>
         </Style>
     </Window.Resources>
     <Grid Margin="10">
@@ -77,12 +89,26 @@
         </StackPanel>
 
         <!-- Filter Controls -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,5,0,10" HorizontalAlignment="Left">
-            <TextBlock Text="Filter by Status:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
-            <CheckBox x:Name="ChkIdentical" Content="Identical" Margin="5,0" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
-            <CheckBox x:Name="ChkDifferent" Content="Different" Margin="5,0" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
-            <CheckBox x:Name="ChkMissing" Content="Missing" Margin="5,0" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
-            <CheckBox x:Name="ChkNew" Content="New" Margin="5,0" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,5,0,10" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+            <TextBlock Text="Filter by Status:" VerticalAlignment="Bottom" Margin="0,0,10,2" FontWeight="SemiBold"/>
+
+            <!-- Each filter shows a live count of matching files above its checkbox -->
+            <StackPanel Margin="5,0" VerticalAlignment="Bottom">
+                <TextBlock x:Name="TxtCountIdentical" Text="0" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <CheckBox x:Name="ChkIdentical" Content="Identical" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
+            </StackPanel>
+            <StackPanel Margin="5,0" VerticalAlignment="Bottom">
+                <TextBlock x:Name="TxtCountDifferent" Text="0" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <CheckBox x:Name="ChkDifferent" Content="Different" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
+            </StackPanel>
+            <StackPanel Margin="5,0" VerticalAlignment="Bottom">
+                <TextBlock x:Name="TxtCountMissing" Text="0" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <CheckBox x:Name="ChkMissing" Content="Missing" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
+            </StackPanel>
+            <StackPanel Margin="5,0" VerticalAlignment="Bottom">
+                <TextBlock x:Name="TxtCountNew" Text="0" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <CheckBox x:Name="ChkNew" Content="New" IsChecked="True" Checked="FilterCheckBox_Changed" Unchecked="FilterCheckBox_Changed"/>
+            </StackPanel>
 
             <!-- Color Legend -->
             <Border BorderThickness="0 0 0 1" BorderBrush="Gray" Margin="20,0,0,0" Padding="5,0,0,0">
@@ -105,13 +131,12 @@
 
         <DataGrid x:Name="DgResults" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True"
                   AlternatingRowBackground="{x:Null}"
-                  RowStyle="{StaticResource RowStyle}"
                   Margin="0,5,0,0">
             <DataGrid.Columns>
                 <!-- Folder = 1/2 of the grid, File = 1/4, Status + Actions share the last 1/4 -->
-                <DataGridTextColumn Header="Folder" Binding="{Binding Folder}" Width="2*"/>
-                <DataGridTextColumn Header="File" Binding="{Binding File}" Width="1*"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.4*"/>
+                <DataGridTextColumn Header="Folder" Binding="{Binding Folder}" Width="2*" ElementStyle="{StaticResource FolderCellText}"/>
+                <DataGridTextColumn Header="File" Binding="{Binding File}" Width="1*" ElementStyle="{StaticResource FileCellText}"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="0.4*" CellStyle="{StaticResource StatusCellStyle}"/>
                 <DataGridTemplateColumn Header="Actions" Width="0.6*" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
