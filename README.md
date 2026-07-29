@@ -37,6 +37,11 @@ dotnet run --project HashCompare/HashCompare.csproj
    folder pair is saved to your history.
 4. Review the grid and use the **filter checkboxes** to show/hide statuses. Use the per-row
    **action buttons** to copy, replace, remove, or diff files.
+5. Narrow large result sets with the two **text filters** on the button row: the left box
+   filters by **folder path**, the right box by **file name**. Both filter live as you type
+   and combine with the status checkboxes. Plain text matches anywhere (case-insensitive);
+   include `*` or `?` to switch to wildcard matching (e.g. `*.log`, `202?-report*`). The
+   filters stay applied when you re-run a comparison.
 
 On the next launch, the Source and Destination fields are pre-filled with the folders from
 your most recent comparison.
@@ -67,6 +72,7 @@ By default, **Identical** files are hidden; Different / Missing / New are shown.
 
 - SHA256 content comparison across two folder trees (recursive).
 - Color-coded, filterable results grid (Folder · File · Status · Actions).
+- Live folder-path and file-name text filters (substring or `*`/`?` wildcards).
 - One-click reconcile actions per row (copy / replace / remove / diff).
 - Background comparison with a progress bar so the UI stays responsive on large trees.
 - Remembered **folder-set history** (up to 25 pairs) in an editable Source drop-down, with

@@ -19,6 +19,10 @@ public partial class MainWindow
     private readonly ICollectionView _resultsView;
     private readonly AppConfig _config;
 
+    /// <summary>Current folder/file text-filter predicates; null = no filter (match all).</summary>
+    private Func<string, bool>? _folderFilter;
+    private Func<string, bool>? _fileFilter;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -414,7 +418,7 @@ public partial class MainWindow
     {
         if (item is FileComparisonResult result)
         {
-            return result.Status switch
+            var statusVisible = result.Status switch
             {
                 "Identical" => ChkIdentical.IsChecked ?? false,
                 "Different" => ChkDifferent.IsChecked ?? true,
@@ -422,6 +426,10 @@ public partial class MainWindow
                 "New" => ChkNew.IsChecked ?? true,
                 _ => true
             };
+
+            return statusVisible
+                   && (_folderFilter?.Invoke(result.Folder) ?? true)
+                   && (_fileFilter?.Invoke(result.File) ?? true);
         }
         return true;
     }
@@ -430,6 +438,35 @@ public partial class MainWindow
     {
         // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
         _resultsView?.Refresh();
+    }
+
+    /// <summary>Rebuilds the folder/file text-filter predicates and reapplies the view filter.</summary>
+    private void TextFilter_Changed(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        _folderFilter = BuildTextFilter(TxtFolderFilter.Text);
+        _fileFilter = BuildTextFilter(TxtFileFilter.Text);
+        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+        _resultsView?.Refresh();
+    }
+
+    /// <summary>
+    /// Builds a match predicate from filter text: plain text matches as a case-insensitive
+    /// substring; text containing * or ? is treated as a wildcard pattern instead.
+    /// Returns null (match all) for empty text.
+    /// </summary>
+    private static Func<string, bool>? BuildTextFilter(string text)
+    {
+        text = text.Trim();
+        if (text.Length == 0)
+            return null;
+
+        if (text.Contains('*') || text.Contains('?'))
+        {
+            var patterns = WildcardMatcher.Compile(text);
+            return value => WildcardMatcher.IsMatch(patterns, value);
+        }
+
+        return value => value.Contains(text, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
