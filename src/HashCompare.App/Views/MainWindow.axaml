@@ -1,0 +1,163 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:HashCompare.App.ViewModels"
+        xmlns:conv="using:HashCompare.App.Converters"
+        xmlns:core="using:HashCompare.Core"
+        x:Class="HashCompare.App.Views.MainWindow"
+        x:Name="Root"
+        Title="Folder Compare" Height="650" Width="1100">
+
+  <Window.Resources>
+    <conv:StatusToBrushConverter x:Key="StatusBrush" />
+  </Window.Resources>
+
+  <Grid Margin="10" RowDefinitions="Auto,Auto,Auto,*">
+
+    <!-- Row 0: folder selection -->
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto,*">
+
+      <!-- Source Folder (editable history dropdown + Browse) -->
+      <StackPanel Grid.Column="0" Margin="0,0,5,0">
+        <DockPanel Margin="0,0,0,5">
+          <Button DockPanel.Dock="Right" Width="110" Content="Swap folders"
+                  Command="{Binding SwapFoldersCommand}" IsEnabled="{Binding !IsBusy}" />
+          <TextBlock Text="Source Folder:" VerticalAlignment="Center" />
+        </DockPanel>
+        <DockPanel>
+          <Button DockPanel.Dock="Right" Width="90" Content="Browse..."
+                  Command="{Binding BrowseSourceCommand}" IsEnabled="{Binding !IsBusy}" />
+          <ComboBox Name="CmbSourceFolder"
+                    IsEditable="True" IsTextSearchEnabled="False"
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{Binding SourceHistory}"
+                    SelectedItem="{Binding SelectedHistoryItem}"
+                    Text="{Binding SourceFolder, Mode=TwoWay}"
+                    IsEnabled="{Binding !IsBusy}" />
+        </DockPanel>
+      </StackPanel>
+
+      <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch" />
+
+      <!-- Destination Folder -->
+      <StackPanel Grid.Column="2" Margin="5,0,0,0">
+        <TextBlock Text="Destination Folder:" Margin="0,0,0,5" />
+        <DockPanel>
+          <Button DockPanel.Dock="Right" Width="90" Content="Browse..."
+                  Command="{Binding BrowseDestCommand}" IsEnabled="{Binding !IsBusy}" />
+          <TextBox Text="{Binding DestFolder}" IsReadOnly="True" />
+        </DockPanel>
+      </StackPanel>
+    </Grid>
+
+    <!-- Row 1: text filters (edges) + action buttons + progress (center) -->
+    <Grid Grid.Row="1" Margin="0,10" ColumnDefinitions="*,Auto,*">
+
+      <TextBox Grid.Column="0" Width="200" HorizontalAlignment="Left" VerticalAlignment="Center"
+               Watermark="Filter by folder..."
+               Text="{Binding FolderFilterText, Mode=TwoWay}" />
+
+      <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+        <Button Content="Compare Folders" Padding="5" Margin="0,0,8,0"
+                Command="{Binding CompareCommand}" IsEnabled="{Binding !IsBusy}" />
+        <Button Content="Config" Padding="5" Width="80"
+                Command="{Binding OpenConfigCommand}" IsEnabled="{Binding !IsBusy}" />
+        <ProgressBar Width="220" Height="18" Margin="16,0,0,0" VerticalAlignment="Center"
+                     IsVisible="{Binding IsBusy}"
+                     Maximum="{Binding ProgressMaximum}" Value="{Binding ProgressValue}" />
+        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"
+                   IsVisible="{Binding IsBusy}" Text="{Binding ProgressText}" />
+      </StackPanel>
+
+      <TextBox Grid.Column="2" Width="200" HorizontalAlignment="Right" VerticalAlignment="Center"
+               Watermark="Filter by file..."
+               Text="{Binding FileFilterText, Mode=TwoWay}" />
+    </Grid>
+
+    <!-- Row 2: status filters with live counts + color legend -->
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,5,0,10"
+                HorizontalAlignment="Left" VerticalAlignment="Bottom">
+      <TextBlock Text="Filter by Status:" VerticalAlignment="Bottom" Margin="0,0,10,2" FontWeight="SemiBold" />
+
+      <StackPanel Margin="5,0" VerticalAlignment="Bottom">
+        <TextBlock Text="{Binding CountIdentical}" FontWeight="Bold" HorizontalAlignment="Center" />
+        <CheckBox Content="Identical" IsChecked="{Binding ShowIdentical}" />
+      </StackPanel>
+      <StackPanel Margin="5,0" VerticalAlignment="Bottom">
+        <TextBlock Text="{Binding CountDifferent}" FontWeight="Bold" HorizontalAlignment="Center" />
+        <CheckBox Content="Different" IsChecked="{Binding ShowDifferent}" />
+      </StackPanel>
+      <StackPanel Margin="5,0" VerticalAlignment="Bottom">
+        <TextBlock Text="{Binding CountMissing}" FontWeight="Bold" HorizontalAlignment="Center" />
+        <CheckBox Content="Missing" IsChecked="{Binding ShowMissing}" />
+      </StackPanel>
+      <StackPanel Margin="5,0" VerticalAlignment="Bottom">
+        <TextBlock Text="{Binding CountNew}" FontWeight="Bold" HorizontalAlignment="Center" />
+        <CheckBox Content="New" IsChecked="{Binding ShowNew}" />
+      </StackPanel>
+
+      <!-- Color Legend -->
+      <Border BorderThickness="0,0,0,1" BorderBrush="Gray" Margin="20,0,0,0" Padding="5,0,0,0">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="Legend: " FontWeight="SemiBold" VerticalAlignment="Center" />
+          <Border Width="16" Height="16" Background="#A5D6A7" Margin="5,0" VerticalAlignment="Center" />
+          <TextBlock Text="New" VerticalAlignment="Center" Margin="0,0,10,0" />
+          <Border Width="16" Height="16" Background="#EF9A9A" Margin="5,0" VerticalAlignment="Center" />
+          <TextBlock Text="Missing" VerticalAlignment="Center" Margin="0,0,10,0" />
+          <Border Width="16" Height="16" Background="#FFF59D" Margin="5,0" VerticalAlignment="Center" />
+          <TextBlock Text="Different" VerticalAlignment="Center" Margin="0,0,10,0" />
+          <Border Width="16" Height="16" Background="White" Margin="5,0" VerticalAlignment="Center" />
+          <TextBlock Text="Identical" VerticalAlignment="Center" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+
+    <!-- Row 3: DataGrid -->
+    <DataGrid Grid.Row="3" CanUserAddRows="False" CanUserDeleteRows="False"
+              CanUserSortColumns="False" AutoGenerateColumns="False" IsReadOnly="True"
+              ItemsSource="{Binding FilteredResults}" SelectionMode="Single"
+              GridLinesVisibility="All">
+      <DataGrid.Columns>
+        <!-- Folder Column -->
+        <DataGridTextColumn Header="Folder" Width="2*" MinWidth="100" Binding="{Binding Folder}" />
+
+        <!-- File Column -->
+        <DataGridTextColumn Header="File" Width="1*" MinWidth="80" Binding="{Binding File}" />
+
+        <!-- Status Column -->
+        <DataGridTemplateColumn Header="Status" Width="0.4*" MinWidth="80">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+              <Border Background="{Binding Status, Converter={StaticResource StatusBrush}}" />
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+
+        <!-- Actions Column -->
+        <DataGridTemplateColumn Header="Actions" Width="0.6*" MinWidth="140">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal" Margin="2,1">
+                <Button Content="Copy to Dest" Margin="2,1" Padding="6,1"
+                        IsVisible="{Binding CanCopyToDest}"
+                        Command="{Binding #Root.((vm:MainWindowViewModel)DataContext).CopyToDestCommand}"
+                        CommandParameter="{Binding}" />
+                <Button Content="Remove from Dest" Margin="2,1" Padding="6,1"
+                        IsVisible="{Binding CanRemoveFromDest}"
+                        Command="{Binding #Root.((vm:MainWindowViewModel)DataContext).CopyToDestCommand}"
+                        CommandParameter="{Binding}" />
+                <Button Content="Replace Dest" Margin="2,1" Padding="6,1"
+                        IsVisible="{Binding CanReplaceDest}"
+                        Command="{Binding #Root.((vm:MainWindowViewModel)DataContext).CopyToDestCommand}"
+                        CommandParameter="{Binding}" />
+                <Button Content="Compare" Margin="2,1" Padding="6,1"
+                        IsVisible="{Binding CanCompare}"
+                        Command="{Binding #Root.((vm:MainWindowViewModel)DataContext).CompareFilesCommand}"
+                        CommandParameter="{Binding}" />
+              </StackPanel>
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+      </DataGrid.Columns>
+    </DataGrid>
+  </Grid>
+</Window>

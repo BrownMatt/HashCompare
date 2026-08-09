@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="HashCompare.App/HashCompare.App.csproj" />
+  <Project Path="HashCompare.Core/HashCompare.Core.csproj" />
+</Solution>
