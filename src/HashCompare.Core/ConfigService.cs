@@ -17,13 +17,15 @@ public static class ConfigService
 
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 
-    public static AppConfig Load()
+    public static AppConfig Load() => Load(ConfigPath);
+
+    public static AppConfig Load(string path)
     {
         try
         {
-            if (File.Exists(ConfigPath))
+            if (File.Exists(path))
             {
-                var json = File.ReadAllText(ConfigPath);
+                var json = File.ReadAllText(path);
                 return JsonSerializer.Deserialize<AppConfig>(json) ?? new AppConfig();
             }
         }
@@ -35,10 +37,12 @@ public static class ConfigService
         return new AppConfig();
     }
 
-    public static void Save(AppConfig config)
+    public static void Save(AppConfig config) => Save(config, ConfigPath);
+
+    public static void Save(AppConfig config, string path)
     {
-        Directory.CreateDirectory(ConfigDir);
-        File.WriteAllText(ConfigPath, JsonSerializer.Serialize(config, Options));
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, JsonSerializer.Serialize(config, Options));
     }
 
     /// <summary>

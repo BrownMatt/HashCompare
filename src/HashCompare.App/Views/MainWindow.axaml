@@ -150,7 +150,6 @@
                         Command="{Binding #Root.((vm:MainWindowViewModel)DataContext).CopyToDestCommand}"
                         CommandParameter="{Binding}" />
                 <Button Content="Compare" Margin="2,1" Padding="6,1"
-                        IsVisible="{Binding CanCompare}"
                         Command="{Binding #Root.((vm:MainWindowViewModel)DataContext).CompareFilesCommand}"
                         CommandParameter="{Binding}" />
               </StackPanel>

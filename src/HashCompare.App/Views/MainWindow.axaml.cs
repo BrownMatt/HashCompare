@@ -26,13 +26,18 @@ public partial class MainWindow : Window, IDialogs
 
     // ----- Phase 3 stubs: replaced with MessageDialog / ConfigWindow in Phase 4 -----
 
-    public Task ShowInfoAsync(string title, string message) => Task.CompletedTask;
+    public Task ShowInfoAsync(string title, string message) =>
+        MessageDialog.Info(this, title, message);
 
-    public Task ShowErrorAsync(string message) => Task.CompletedTask;
+    public Task ShowErrorAsync(string message) =>
+        MessageDialog.Error(this, message);
 
-    // Returning false keeps the delete action inert until the real confirm dialog exists.
-    public Task<bool> ConfirmAsync(string title, string message) => Task.FromResult(false);
+    public Task<bool> ConfirmAsync(string title, string message) =>
+        MessageDialog.Confirm(this, title, message);
 
-    public Task<bool> ShowConfigAsync(AppConfig config, string source, string destination) =>
-        Task.FromResult(false);
+    public async Task<bool> ShowConfigAsync(AppConfig config, string source, string destination)
+    {
+        var dialog = new ConfigWindow(source, destination, config);
+        return await dialog.ShowDialog<bool?>(this) == true;
+    }
 }

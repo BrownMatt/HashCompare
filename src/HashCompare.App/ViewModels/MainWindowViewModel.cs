@@ -52,6 +52,9 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty] private int _countMissing;
     [ObservableProperty] private int _countNew;
 
+    // Command enable/disable states.
+    public bool CanCompare => ShowDifferent || ShowMissing;
+
     public ObservableCollection<string> SourceHistory { get; } = [];
     public ObservableCollection<FileComparisonResult> FilteredResults { get; } = [];
 
@@ -311,4 +314,9 @@ public partial class MainWindowViewModel : ObservableObject
         CountMissing = _allResults.Count(r => r.Status == FileStatus.Missing);
         CountNew = _allResults.Count(r => r.Status == FileStatus.New);
     }
+
+    // Command enable/disable states for row buttons.
+    public bool CanCopyToDest => ShowMissing;
+    public bool CanRemoveFromDest => ShowNew;
+    public bool CanReplaceDest => ShowDifferent;
 }

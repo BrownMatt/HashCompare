@@ -1,6 +1,5 @@
 using Avalonia.Controls;
-using HashCompare.App.ViewModels;
-using System.Collections.ObjectModel;
+using Avalonia.Interactivity;
 
 namespace HashCompare.App.Views;
 
@@ -12,12 +11,15 @@ public sealed class CheckItem
 }
 
 /// <summary>
-/// Generic checkbox picker used by the Config dialog to choose folders or file extensions to exclude.
-/// Returns the checked names when closed via "Exclude selected".
+/// Generic checkbox picker used by the Config dialog to choose folders or file extensions to
+/// exclude. Returns the checked names when closed via "Exclude selected".
 /// </summary>
 public partial class ScanSelectWindow : Window
 {
     private readonly List<CheckItem> _items;
+
+    // Parameterless ctor required by the XAML loader; not used at runtime.
+    public ScanSelectWindow() : this("", []) { }
 
     public ScanSelectWindow(string prompt, List<CheckItem> items)
     {
@@ -30,11 +32,11 @@ public partial class ScanSelectWindow : Window
     /// <summary>Names of the checked items; populated when the dialog is accepted.</summary>
     public IReadOnlyList<string> SelectedItems { get; private set; } = [];
 
-    private void ExcludeSelected_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    private void ExcludeSelected_Click(object? sender, RoutedEventArgs e)
     {
         SelectedItems = _items.Where(i => i.IsChecked).Select(i => i.Name).ToList();
         Close(true);
     }
 
-    private void Cancel_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e) => Close(false);
+    private void Cancel_Click(object? sender, RoutedEventArgs e) => Close(false);
 }

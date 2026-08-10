@@ -17,8 +17,8 @@ public sealed class WildcardMatcherTests
     {
         var patterns = WildcardMatcher.Compile("*.txt");
         Assert.Single(patterns);
-        Assert.True(patterns[0].Match("test.txt"));
-        Assert.False(patterns[0].Match("test.pdf"));
+        Assert.True(WildcardMatcher.IsMatch(patterns, "test.txt"));
+        Assert.False(WildcardMatcher.IsMatch(patterns, "test.pdf"));
     }
 
     [Fact]
@@ -26,8 +26,8 @@ public sealed class WildcardMatcherTests
     {
         var patterns = WildcardMatcher.Compile("*.txt;*.log");
         Assert.Equal(2, patterns.Count);
-        Assert.True(patterns[0].Match("file.txt"));
-        Assert.True(patterns[1].Match("file.log"));
+        Assert.True(WildcardMatcher.IsMatch(patterns, "file.txt"));
+        Assert.True(WildcardMatcher.IsMatch(patterns, "file.log"));
     }
 
     [Fact]

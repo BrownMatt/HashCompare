@@ -1,7 +1,7 @@
 # Port Status
 
 ## Overview
-Phase 1 (Scaffolding) is complete. Phase 2 (Core Extraction + Tests) is complete. Phase 3 (MainWindowViewModel + MainWindow) is now complete. The Avalonia UI layer compiles successfully.
+Phase 1 (Scaffolding) is complete. Phase 2 (Core Extraction + Tests) is complete. Phase 3 (MainWindowViewModel + MainWindow) is complete. Phase 4 (Dialogs: MessageDialog, ConfigWindow, ScanSelectWindow) is now complete. All Avalonia UI layer files exist and compile successfully.
 
 ## What Was Built
 
@@ -30,9 +30,11 @@ Phase 1 (Scaffolding) is complete. Phase 2 (Core Extraction + Tests) is complete
 - `Views/MainWindow.axaml` - **Phase 3 COMPLETE** (Full layout matching WPF, Status brush converter, command bindings via #Root cast)
 - `Views/MainWindow.axaml.cs` - **Phase 3 COMPLETE** (IDialogs implementation with stub methods)
 - `Views/Converters/StatusToBrushConverter.cs` - **Phase 3 COMPLETE** (FileStatus enum to Avalonia brush mapping)
-- `Views/MessageDialog.axaml/.cs` - **Phase 4 PENDING** (Message box replacement)
-- `Views/ConfigWindow.axaml/.cs` - **Phase 4 PENDING** (Configuration dialog)
-- `Views/ScanSelectWindow.axaml/.cs` - **Phase 4 PENDING** (Checkbox picker)
+- `Views/MessageDialog.axaml/.cs` - **Phase 4 COMPLETE** (Custom message box replacement)
+- `Views/ConfigWindow.axaml/.cs` - **Phase 4 COMPLETE** (Configuration dialog with scan features)
+- `Views/ScanSelectWindow.axaml/.cs` - **Phase 4 COMPLETE** (Generic checkbox picker)
+- `Services/DiffToolLauncher.cs` - **Phase 5 PENDING** (Per-OS diff tool launcher)
+- `App.axaml` - **Phase 4 COMPLETE** (Added DataGrid StyleInclude)
 - `Views/DiffToolLauncher.cs` - **Phase 5 PENDING** (Per-OS diff tool launcher)
 
 ### Tests (`tests/HashCompare.Core.Tests/`)
@@ -75,6 +77,9 @@ C:\Users\Matt Brown\RiderProjects\HashCompare\
 ### Phase 3 MainWindowViewModel + MainWindow Gate
 **Status**: ✅ PASSED
 
+### Phase 4 Dialogs Gate
+**Status**: ✅ PASSED
+
 Files created:
 - ✅ `ViewModels/MainWindowViewModel.cs` - Complete implementation with CommunityToolkit.Mvvm source generators
   - IDialogs interface for loose coupling between ViewModel and View
@@ -102,18 +107,59 @@ Files created:
   - Actions column uses #Root.((vm:MainWindowViewModel)DataContext).COMMAND_NAME pattern for binding
   - Delete button also binds to CopyToDestCommand (per deliberate change 4)
 
-- ✅ `Views/MainWindow.axaml.cs` - IDialogs implementation with stub methods
+- ✅ `Views/MainWindow.axaml.cs` - IDialogs implementation with stub methods (replaced in Phase 4)
   - PickFolderAsync using Avalonia StorageProvider
-  - ShowInfoAsync, ShowErrorAsync, ConfirmAsync, ShowConfigAsync stubs (replaced in Phase 4)
+
+### Phase 4 Dialogs Gate
+**Status**: ✅ PASSED
+
+Files created:
+- ✅ `Views/MessageDialog.axaml` - Message box replacement UI
+  - Single modal dialog with customizable buttons
+  - Supports Info, Error, and Confirm scenarios via static helpers
+  - Escape key dismisses (No/Cancel behavior per WPF)
+
+- ✅ `Views/MessageDialog.axaml.cs` - Full implementation
+  - Generic `ShowAsync<T>` method for dynamic button sets
+  - `Info`, `Error`, `Confirm` convenience helpers
+  - Escape key handler for dismissal semantics
+
+- ✅ `Views/ConfigWindow.axaml` - Configuration dialog UI
+  - Diff tool path and arguments
+  - Exclude folders and extensions with scan features
+  - Scan buttons delegate to FolderScanner.CollectFolderNames/CollectFileExtensions
+  - Semicolon-delimited list UI with Append() helper for deduplication
+
+- ✅ `Views/ConfigWindow.axaml.cs` - Full implementation
+  - Loads/saves AppConfig fields
+  - BrowseDiffTool_Click opens file picker (All files + Executables)
+  - ScanFolders_Click uses ScanSelectWindow for folder exclusion
+  - ScanFiles_Click uses ScanSelectWindow for extension exclusion
+  - Append() method de-duplicates case-insensitively on Windows
+
+- ✅ `Views/ScanSelectWindow.axaml` - Generic checkbox picker UI
+  - Prompt text + ItemsControl with DataTemplate
+  - "Exclude selected" and Cancel buttons
+
+- ✅ `Views/ScanSelectWindow.axaml.cs` - Full implementation
+  - CheckItem DTO for checkbox state
+  - ExcludeSelected_Click returns selected names
+  - Cancel_Click returns false (No/Cancel)
+
+- ✅ `App.axaml` - Added DataGrid StyleInclude (bug fix)
+  - Critical for DataGrid rendering (otherwise grid area is blank rectangle)
+
+- ✅ `Views/MainWindow.axaml.cs` - Phase 4 stubs replaced
+  - ShowInfoAsync → MessageDialog.Info
+  - ShowErrorAsync → MessageDialog.Error
+  - ConfirmAsync → MessageDialog.Confirm
+  - ShowConfigAsync → ConfigWindow.ShowDialog
 
 Build results:
 - ✅ Core projects compile successfully
-- ✅ MainWindow.axaml XAML compiles without errors
-- ✅ MainWindowViewModel.cs compiles with CommunityToolkit source generators
-- ⚠️ App project has 1 warning (Tmds.DBus.Protocol security advisory - known, acceptable)
-- ⚠️ Remaining errors are Phase 4 items:
-  - ConfigWindow.axaml.cs (missing AppConfig using)
-  - ConfigWindow.axaml (referenced by ShowConfigAsync stub)
+- ✅ App project compiles without errors
+- ✅ DataGrid StyleInclude resolves DataGrid rendering issue
+- ✅ All dialogs integrate correctly with MainWindowViewModel
 
 ## Files Skipped
 None - Phase 3 is complete.

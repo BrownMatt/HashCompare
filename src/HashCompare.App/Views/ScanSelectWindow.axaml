@@ -1,32 +1,28 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d"
+        xmlns:local="using:HashCompare.App.Views"
         x:Class="HashCompare.App.Views.ScanSelectWindow"
-        Title="Scan"
-        Height="450"
-        Width="420"
+        Title="Scan" Height="450" Width="420"
         WindowStartupLocation="CenterOwner">
-    <DockPanel Margin="10">
-        <TextBlock x:Name="TxtPrompt" DockPanel.Dock="Top" Margin="0,0,0,8" TextWrapping="Wrap"/>
+  <DockPanel Margin="10">
+    <TextBlock Name="TxtPrompt" DockPanel.Dock="Top" Margin="0,0,0,8" TextWrapping="Wrap" />
 
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
-                    HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button Content="Exclude selected" Width="120" Margin="0,0,8,0" Click="ExcludeSelected_Click"/>
-            <Button Content="Cancel" Width="80" Click="Cancel_Click"/>
-        </StackPanel>
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
+                HorizontalAlignment="Right" Margin="0,10,0,0" Spacing="8">
+      <Button Content="Exclude selected" Width="130" Click="ExcludeSelected_Click" />
+      <Button Content="Cancel" Width="80" Click="Cancel_Click" />
+    </StackPanel>
 
-        <Border BorderBrush="Gray" BorderThickness="1">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl x:Name="ItemsList" Margin="6">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}" Margin="2"/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </Border>
-    </DockPanel>
+    <Border BorderBrush="Gray" BorderThickness="1">
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ItemsControl Name="ItemsList" Margin="6">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="local:CheckItem">
+              <CheckBox Content="{Binding Name}" IsChecked="{Binding IsChecked}" Margin="2" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+  </DockPanel>
 </Window>
