@@ -1,8 +1,8 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:HashCompare.App.ViewModels"
-        xmlns:conv="using:HashCompare.App.Converters"
-        xmlns:core="using:HashCompare.Core"
+        xmlns:vm="clr-namespace:HashCompare.App.ViewModels;assembly=HashCompare.App"
+        xmlns:conv="clr-namespace:HashCompare.App.Converters;assembly=HashCompare.App"
+        xmlns:core="clr-namespace:HashCompare.Core;assembly=HashCompare.Core"
         x:Class="HashCompare.App.Views.MainWindow"
         x:Name="Root"
         Title="Folder Compare" Height="650" Width="1100">
