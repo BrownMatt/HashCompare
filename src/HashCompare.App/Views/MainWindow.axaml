@@ -26,11 +26,11 @@
         <DockPanel>
           <Button DockPanel.Dock="Right" Width="90" Content="Browse..."
                   Command="{Binding BrowseSourceCommand}" IsEnabled="{Binding !IsBusy}" />
-          <ComboBox Name="CmbSourceFolder"
-                    IsEditable="True" IsTextSearchEnabled="False"
+          <AutoCompleteBox Name="CmbSourceFolder"
                     HorizontalAlignment="Stretch"
                     ItemsSource="{Binding SourceHistory}"
                     SelectedItem="{Binding SelectedHistoryItem}"
+                    FilterMode="None" MinimumPrefixLength="0"
                     Text="{Binding SourceFolder, Mode=TwoWay}"
                     IsEnabled="{Binding !IsBusy}" />
         </DockPanel>
@@ -112,10 +112,8 @@
     </StackPanel>
 
     <!-- Row 3: DataGrid -->
-    <DataGrid Grid.Row="3" CanUserAddRows="False" CanUserDeleteRows="False"
-              CanUserSortColumns="False" AutoGenerateColumns="False" IsReadOnly="True"
-              ItemsSource="{Binding FilteredResults}" SelectionMode="Single"
-              GridLinesVisibility="All">
+    <DataGrid Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True"
+              ItemsSource="{Binding FilteredResults}" GridLinesVisibility="All">
       <DataGrid.Columns>
         <!-- Folder Column -->
         <DataGridTextColumn Header="Folder" Width="2*" MinWidth="100" Binding="{Binding Folder}" />

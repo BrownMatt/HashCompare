@@ -5,7 +5,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +18,7 @@
     <PackageReference Include="Avalonia.Controls.DataGrid" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Avalonia.Diagnostics" Condition="'$(Configuration)'=='Debug'" />
+    <PackageReference Include="Tmds.DBus.Protocol" />
   </ItemGroup>
 
   <ItemGroup>

@@ -250,7 +250,7 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void CompareFiles(FileComparisonResult result)
     {
-        if (!DiffToolLauncher.Launch(_config, result.SourceFullPath, result.DestFullPath))
+        if (!DiffToolLauncher.TryLaunch(_config, result.SourceFullPath, result.DestFullPath))
         {
             var message = $"No diff tool was found. Configure one under Config, or install WinMerge or VS Code.\n\nSource: {result.SourceFullPath}\nDestination: {result.DestFullPath}";
             Task.Run(async () => await _dialogs.ShowInfoAsync("Compare", message));

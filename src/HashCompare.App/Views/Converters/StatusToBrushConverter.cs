@@ -25,7 +25,7 @@ public class StatusToBrushConverter : IValueConverter
         return Avalonia.Media.Brushes.White;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public object? ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
         throw new NotImplementedException();
     }
