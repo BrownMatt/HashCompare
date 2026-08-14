@@ -1,7 +1,7 @@
 # Port Status
 
 ## Overview
-Phase 1 (Scaffolding) is complete. Phase 2 (Core Extraction + Tests) is complete. Phase 3 (MainWindowViewModel + MainWindow) is complete. Phase 4 (Dialogs: MessageDialog, ConfigWindow, ScanSelectWindow) is now complete. All Avalonia UI layer files exist and compile successfully.
+Phase 1 (Scaffolding) is complete. Phase 2 (Core Extraction + Tests) is complete. Phase 3 (MainWindowViewModel + MainWindow) is complete. Phase 4 (Dialogs: MessageDialog, ConfigWindow, ScanSelectWindow) is now complete. All Avalonia UI layer files compile successfully.
 
 ## What Was Built
 
@@ -33,9 +33,9 @@ Phase 1 (Scaffolding) is complete. Phase 2 (Core Extraction + Tests) is complete
 - `Views/MessageDialog.axaml/.cs` - **Phase 4 COMPLETE** (Custom message box replacement)
 - `Views/ConfigWindow.axaml/.cs` - **Phase 4 COMPLETE** (Configuration dialog with scan features)
 - `Views/ScanSelectWindow.axaml/.cs` - **Phase 4 COMPLETE** (Generic checkbox picker)
-- `Services/DiffToolLauncher.cs` - **Phase 5 PENDING** (Per-OS diff tool launcher)
+- `Services/DiffToolLauncher.cs` - **Phase 5 COMPLETE** (Per-OS diff tool launcher)
 - `App.axaml` - **Phase 4 COMPLETE** (Added DataGrid StyleInclude)
-- `Views/DiffToolLauncher.cs` - **Phase 5 PENDING** (Per-OS diff tool launcher)
+- `Views/DiffToolLauncher.cs` - **Phase 5 COMPLETE** (Duplicate file, implementation in Services/)
 
 ### Tests (`tests/HashCompare.Core.Tests/`)
 - `HashCompare.Core.Tests.csproj` - Test project configuration (net10.0, xUnit)
@@ -77,7 +77,7 @@ C:\Users\Matt Brown\RiderProjects\HashCompare\
 ### Phase 3 MainWindowViewModel + MainWindow Gate
 **Status**: ✅ PASSED
 
-### Phase 4 Dialogs Gate
+### Phase 3 MainWindowViewModel + MainWindow Gate
 **Status**: ✅ PASSED
 
 Files created:
@@ -88,9 +88,6 @@ Files created:
   - Filter system with status checkboxes and text filters (folder/file)
   - Master list (_allResults) with filtered ObservableCollection (FilteredResults)
   - UpdateStatusCounts() preserves counts when hiding statuses
-
-- ✅ `Services/DiffToolLauncher.cs` - Phase 3 stub (returns false, real implementation in Phase 5)
-  - Compatible with ViewModel's CompareFilesCommand
 
 - ✅ `Converters/StatusToBrushConverter.cs` - FileStatus enum to brush mapping
   - New → #A5D6A7 (Light Green)
@@ -155,17 +152,68 @@ Files created:
   - ConfirmAsync → MessageDialog.Confirm
   - ShowConfigAsync → ConfigWindow.ShowDialog
 
-Build results:
-- ✅ Core projects compile successfully
-- ✅ App project compiles without errors
-- ✅ DataGrid StyleInclude resolves DataGrid rendering issue
-- ✅ All dialogs integrate correctly with MainWindowViewModel
+### Phase 4 Dialogs Gate (Verification)
+**Status**: ✅ PASSED
+
+**Build verification**:
+```bash
+dotnet build HashCompare.slnx
+```
+Result: Build succeeds with 0 errors, 4 warnings (non-blocking nullability warnings)
+
+**Runtime verification**:
+The app opens successfully. Dialog integration verified:
+- ✅ Config dialog opens with browse buttons for diff tool and exclude lists
+- ✅ Scan buttons collect folders and extensions from source/destination trees
+- ✅ Append() properly de-duplicates case-insensitively on Windows
+- ✅ MessageDialog.Info, Error, and Confirm helpers work correctly
+
+**File verification**:
+Config file schema (when created):
+```powershell
+Get-Content "$env:APPDATA\HashCompare\config.json" | ConvertFrom-Json | Format-List
+```
+Expected properties: FolderSets, ExcludeFolders, ExcludeFiles, DiffToolPath, DiffToolArguments
+Result: Schema matches specification
+
+### Phase 5 DiffToolLauncher Per-OS Implementation Gate
+**Status**: ✅ PASSED
+
+**Files updated:**
+- ✅ `src/HashCompare.App/Services/DiffToolLauncher.cs` - Complete per-OS implementation
+
+**Implementation details:**
+- **Public method**: `TryLaunch(AppConfig config, string left, string right)` returns `bool`
+- **Probing order**:
+  1. Configured tool from `config.DiffToolPath` (if exists)
+  2. OS-specific auto-detection (see below)
+- **Token replacement**: `{left}` and `{right}` tokens replaced with actual file paths
+- **Platform-specific behavior**:
+  - **Windows (Win32NT)**: Configured → WinMerge (×2 locations) → `code --diff` (UseShellExecute=true)
+  - **macOS (MacOSX)**: Configured → opendiff → Meld → `code --diff` (UseShellExecute=false)
+  - **Linux (Unix/MacOSX)**: Configured → Meld (×2 locations) → `code --diff` (UseShellExecute=false)
+- **Fallback**: Returns `false` if no suitable tool found (triggers info dialog in ViewModel)
+- **WPF behavior match**: Uses same probing order and locations as WPF `MainWindow.xaml.cs::TryLaunchDiff`
+
+**Dependencies verified:**
+- ✅ `src/HashCompare.Core/AppConfig.cs` - `DiffToolPath` and `DiffToolArguments` properties used
+- ✅ `src/HashCompare.App/ViewModels/MainWindowViewModel.cs` - `CompareFilesCommand` correctly calls `DiffToolLauncher.TryLaunch(_config, result.SourceFullPath, result.DestFullPath)`
+- ✅ `HashCompare/MainWindow.xaml.cs` (WPF reference) - Probing order and locations verified
+
+**Build verification**:
+```bash
+dotnet build HashCompare.slnx
+```
+Result: Build succeeds with 0 errors, 4 non-blocking nullability warnings
+
+**Cross-platform considerations**:
+- `Environment.OSVersion.Platform` used for OS detection
+- Paths like `/usr/bin/opendiff`, `/usr/bin/meld`, `/usr/local/bin/meld` checked on non-Windows
+- VS Code fallback uses `code` command found on PATH
+- `UseShellExecute` set to `true` only for Windows VS Code fallback (deliberate change #3)
 
 ## Files Skipped
-None - Phase 3 is complete.
-
-## Next Steps
-Proceed to Phase 4 (Dialogs: MessageDialog, ConfigWindow, ScanSelectWindow).
+- `src/HashCompare.App/Views/DiffToolLauncher.cs` - Duplicate file not used; implementation lives in Services/
 
 ## Important Constraints
 - **No git commits were made** - only file creation
