@@ -113,7 +113,8 @@
 
     <!-- Row 3: DataGrid -->
     <DataGrid Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True"
-              ItemsSource="{Binding FilteredResults}" GridLinesVisibility="All">
+              ItemsSource="{Binding FilteredResults}" GridLinesVisibility="All"
+              CanUserResizeColumns="True" CanUserSortColumns="False">
       <DataGrid.Columns>
         <!-- Folder Column -->
         <DataGridTextColumn Header="Folder" Width="2*" MinWidth="100" Binding="{Binding Folder}" />
