@@ -17,6 +17,7 @@ public sealed class ComparisonEngineTests
             File.WriteAllText(Path.Combine(sourceDir, "file1.txt"), "content");
             File.WriteAllText(Path.Combine(sourceDir, "file2.txt"), "content");
             File.WriteAllText(Path.Combine(destDir, "file1.txt"), "content");
+            File.WriteAllText(Path.Combine(destDir, "file2.txt"), "content");
             Directory.CreateDirectory(Path.Combine(sourceDir, "sub"));
             File.WriteAllText(Path.Combine(sourceDir, "sub", "file3.txt"), "content");
 
