@@ -1,5 +1,0 @@
-# HashCompare Solution
-# This solution contains the new Avalonia port only.
-# The existing WPF solution (HashCompare.sln) remains untouched.
-
-Microsoft.NET.Sdk.Solution
