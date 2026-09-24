@@ -7,6 +7,9 @@ namespace HashCompare.App.Services;
 /// <summary>Launches an external diff tool per-OS behavior. Returns true if launched successfully, false if no tool found.</summary>
 public static class DiffToolLauncher
 {
+    private const string DefaultArguments = "\"{left}\" \"{right}\"";
+    private const string VsCodeArguments = "--diff \"{left}\" \"{right}\"";
+
     /// <summary>
     /// Launches an external diff tool. Prefers the configured tool in AppConfig, then falls back to OS-probed tools.
     /// </summary>
@@ -20,7 +23,7 @@ public static class DiffToolLauncher
         if (!string.IsNullOrWhiteSpace(config.DiffToolPath) && File.Exists(config.DiffToolPath))
         {
             var template = string.IsNullOrWhiteSpace(config.DiffToolArguments)
-                ? "\"{left}\" \"{right}\""
+                ? DefaultArguments
                 : config.DiffToolArguments;
             var args = template.Replace("{left}", left).Replace("{right}", right);
             Process.Start(new ProcessStartInfo(config.DiffToolPath, args) { UseShellExecute = false });
@@ -32,18 +35,19 @@ public static class DiffToolLauncher
         if (tool == null)
             return false;
 
-        var diffArgs = "\"{left}\" \"{right}\"".Replace("{left}", left).Replace("{right}", right);
-        Process.Start(new ProcessStartInfo(tool, diffArgs) { UseShellExecute = true });
+        var diffArgs = tool.Value.Arguments.Replace("{left}", left).Replace("{right}", right);
+        Process.Start(new ProcessStartInfo(tool.Value.Path, diffArgs) { UseShellExecute = true });
         return true;
     }
 
-    /// <summary>Probes the system for a diff tool matching the user's OS. Returns the tool path or null if none found.</summary>
-    private static string? DetectDiffTool()
+    /// <summary>
+    /// Probes the system for a diff tool matching the user's OS without starting any process.
+    /// Returns the tool path and its argument template, or null if none found.
+    /// </summary>
+    private static (string Path, string Arguments)? DetectDiffTool()
     {
-        var platform = Environment.OSVersion.Platform;
-
         // Windows: WinMerge in multiple locations, then VS Code.
-        if (platform == PlatformID.Win32NT)
+        if (OperatingSystem.IsWindows())
         {
             foreach (var winMerge in new[]
                      {
@@ -52,66 +56,82 @@ public static class DiffToolLauncher
                      })
             {
                 if (File.Exists(winMerge))
-                    return winMerge;
+                    return (winMerge, DefaultArguments);
             }
 
-            // Fallback to VS Code on PATH.
-            try
-            {
-                // UseShellExecute=true for VS Code as per deliberate change #3.
-                Process.Start(new ProcessStartInfo("code", "--diff \"{left}\" \"{right}\"")
-                    { UseShellExecute = true });
-                return "code";
-            }
-            catch
-            {
-                // code not in PATH, continue to next OS probe.
-            }
+            // On Windows the VS Code launcher on PATH is code.cmd; the extensionless "code" is a shell script.
+            var code = FindOnPath("code.cmd") ?? FindOnPath("code");
+            return code == null ? null : (code, VsCodeArguments);
         }
 
         // macOS: opendiff, then Meld, then VS Code.
-        if (platform == PlatformID.MacOSX)
+        if (OperatingSystem.IsMacOS())
         {
-            if (File.Exists("/usr/bin/opendiff"))
-                return "/usr/bin/opendiff";
+            // Apps started from Finder get a minimal PATH, so also check the Homebrew prefixes.
+            var opendiff = FindOnPath("opendiff", "/usr/bin");
+            if (opendiff != null)
+                return (opendiff, DefaultArguments);
 
-            if (File.Exists("/usr/local/bin/meld"))
-                return "/usr/local/bin/meld";
+            var meld = FindOnPath("meld", "/opt/homebrew/bin", "/usr/local/bin");
+            if (meld != null)
+                return (meld, DefaultArguments);
 
-            try
-            {
-                Process.Start(new ProcessStartInfo("code", "--diff \"{left}\" \"{right}\"")
-                    { UseShellExecute = false });
-                return "code";
-            }
-            catch
-            {
-                // code not in PATH, continue to next OS probe.
-            }
+            var code = FindOnPath("code", "/opt/homebrew/bin", "/usr/local/bin");
+            return code == null ? null : (code, VsCodeArguments);
         }
 
         // Linux: Meld, then VS Code.
-        if (platform == PlatformID.Unix || platform == PlatformID.MacOSX)
+        if (OperatingSystem.IsLinux())
         {
-            // Meld often installed in /usr/bin or ~/local/bin.
-            if (File.Exists("/usr/bin/meld"))
-                return "/usr/bin/meld";
+            var meld = FindOnPath("meld", "/usr/bin", "/usr/local/bin");
+            if (meld != null)
+                return (meld, DefaultArguments);
 
-            if (File.Exists("/usr/local/bin/meld"))
-                return "/usr/local/bin/meld";
-
-            try
-            {
-                Process.Start(new ProcessStartInfo("code", "--diff \"{left}\" \"{right}\"")
-                    { UseShellExecute = false });
-                return "code";
-            }
-            catch
-            {
-                // code not in PATH, nothing left to try.
-            }
+            var code = FindOnPath("code", "/usr/bin", "/usr/local/bin", "/snap/bin");
+            return code == null ? null : (code, VsCodeArguments);
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Searches each PATH entry, then any extra fallback directories, for an executable file with the given name.
+    /// Returns its full path, or null if not found.
+    /// </summary>
+    private static string? FindOnPath(string fileName, params string[] extraDirectories)
+    {
+        var pathDirectories = (Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
+            .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        foreach (var directory in pathDirectories.Concat(extraDirectories))
+        {
+            string candidate;
+            try
+            {
+                candidate = Path.Combine(directory.Trim('"'), fileName);
+            }
+            catch (ArgumentException)
+            {
+                // Malformed PATH entry; skip it.
+                continue;
+            }
+
+            if (IsExecutableFile(candidate))
+                return candidate;
+        }
+
+        return null;
+    }
+
+    private static bool IsExecutableFile(string path)
+    {
+        if (!File.Exists(path))
+            return false;
+
+        if (OperatingSystem.IsWindows())
+            return true;
+
+        const UnixFileMode anyExecute = UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute;
+        return (File.GetUnixFileMode(path) & anyExecute) != 0;
     }
 }

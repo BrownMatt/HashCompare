@@ -98,7 +98,16 @@ corrupted, the app falls back to defaults rather than failing to start.
 ### Diff tool
 
 - **Diff tool path** — full path to the executable used by the row **Compare** action
-  (use **Browse…** to select it). Leave **blank** to auto-detect WinMerge, then VS Code.
+  (use **Browse…** to select it). Leave **blank** to auto-detect a tool for your OS:
+  - **Windows:** WinMerge (in `Program Files` or `Program Files (x86)`), then VS Code
+    (`code.cmd` on `PATH`).
+  - **macOS:** `opendiff` (Xcode FileMerge), then Meld, then VS Code — each looked up on `PATH`,
+    plus `/opt/homebrew/bin` and `/usr/local/bin` for Meld and VS Code.
+  - **Linux:** Meld, then VS Code — each looked up on `PATH`, plus `/usr/bin` and `/usr/local/bin`
+    (and `/snap/bin` for VS Code).
+
+  An auto-detected VS Code is always opened with `--diff`. The **Diff tool arguments** below
+  apply only to a configured tool.
 - **Diff tool arguments** — the argument template passed to the tool. The tokens `{left}` and
   `{right}` are replaced with the source and destination file paths.
   - WinMerge example: `"{left}" "{right}"`
@@ -134,6 +143,6 @@ and destination; tick the ones you want and choose **Exclude selected** to appen
 ## Notes & limitations
 
 - Windows-only (uses WPF + a WinForms folder/file picker).
-- The **Compare** action requires a diff tool — either the one you configure, or WinMerge /
-  VS Code installed on the machine.
+- The **Compare** action requires a diff tool — either the one you configure, or one of the
+  auto-detected tools listed under [Diff tool](#diff-tool) installed on the machine.
 - There are currently no automated tests.
