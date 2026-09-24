@@ -1,28 +1,48 @@
 # HashCompare
 
-A Windows desktop app for comparing the contents of two folders by **SHA256 hash**, so you
+A cross-platform desktop app (Windows, macOS, Linux) for comparing the contents of two folders by **SHA256 hash**, so you
 can verify backups, copies, and migrations with byte-level confidence instead of trusting
 file sizes or timestamps. Each result row offers one-click actions to reconcile the two
 folders.
 
-Built with **WPF** on **.NET 10** (Windows-only).
+Built with **[Avalonia UI](https://avaloniaui.net/)** on **.NET 10**.
 
 ---
 
 ## Requirements
 
-- Windows
-- [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)
-  (`Microsoft.WindowsDesktop.App 10.x`)
-- Optional: a diff tool ([WinMerge](https://winmerge.org/) or
-  [VS Code](https://code.visualstudio.com/)) for the per-file **Compare** action
+- Windows, macOS, or Linux
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) to build (or the .NET 10
+  Runtime to run a published build)
+- Optional: a diff tool for the per-file **Compare** action, such as
+  [WinMerge](https://winmerge.org/), [Meld](https://meldmerge.org/), or
+  [VS Code](https://code.visualstudio.com/)
 
-## Build & run
+## Build, run & test
 
 ```sh
 # from the repo root
-dotnet build HashCompare.sln -c Release
-dotnet run --project HashCompare/HashCompare.csproj
+dotnet build HashCompare.slnx -c Release
+dotnet run --project src/HashCompare.App/HashCompare.App.csproj
+dotnet test HashCompare.slnx
+```
+
+## Project layout
+
+```
+HashCompare.slnx                 Solution file
+Directory.Build.props            Shared MSBuild settings
+Directory.Packages.props         Central NuGet package versions
+src/
+  HashCompare.Core/              UI-independent logic: hashing and comparison engine,
+                                 folder scanning, wildcard matching, config persistence
+  HashCompare.App/               Avalonia desktop app (MVVM via CommunityToolkit.Mvvm)
+    ViewModels/                  MainWindowViewModel
+    Views/                       Main window and dialogs (Config, Scan, Message)
+    Converters/                  Status-to-color converter for the results grid
+    Services/                    DiffToolLauncher (per-OS diff tool detection)
+tests/
+  HashCompare.Core.Tests/        xUnit tests for HashCompare.Core
 ```
 
 ---
@@ -86,11 +106,13 @@ By default, **Identical** files are hidden; Different / Missing / New are shown.
 ## Configuration
 
 Click **Config** (next to *Compare Folders*) to open the configuration dialog. Settings are
-saved to:
+saved to `HashCompare/config.json` under your user's application-data folder:
 
-```
-%APPDATA%\HashCompare\config.json
-```
+| OS      | Location                                                        |
+|---------|-----------------------------------------------------------------|
+| Windows | `%APPDATA%\HashCompare\config.json`                              |
+| macOS   | `~/Library/Application Support/HashCompare/config.json`        |
+| Linux   | `$XDG_CONFIG_HOME/HashCompare/config.json` (default `~/.config`) |
 
 This same file also stores your folder-set history. It's created automatically; if it's ever
 corrupted, the app falls back to defaults rather than failing to start.
@@ -98,10 +120,14 @@ corrupted, the app falls back to defaults rather than failing to start.
 ### Diff tool
 
 - **Diff tool path** — full path to the executable used by the row **Compare** action
-  (use **Browse…** to select it). Leave **blank** to auto-detect WinMerge, then VS Code.
+  (use **Browse…** to select it). Leave **blank** to auto-detect one:
+  - **Windows**: WinMerge (in `Program Files`), then VS Code (`code` on `PATH`)
+  - **macOS / Linux**: Meld (`/usr/bin/meld` or `/usr/local/bin/meld`), then VS Code
+    (`code` on `PATH`)
 - **Diff tool arguments** — the argument template passed to the tool. The tokens `{left}` and
   `{right}` are replaced with the source and destination file paths.
   - WinMerge example: `"{left}" "{right}"`
+  - Meld example: `"{left}" "{right}"`
   - VS Code example: `--diff "{left}" "{right}"`
 
 ### Exclude folders
@@ -133,7 +159,8 @@ and destination; tick the ones you want and choose **Exclude selected** to appen
 
 ## Notes & limitations
 
-- Windows-only (uses WPF + a WinForms folder/file picker).
-- The **Compare** action requires a diff tool — either the one you configure, or WinMerge /
-  VS Code installed on the machine.
-- There are currently no automated tests.
+- Path matching follows the platform: case-insensitive on Windows and macOS,
+  case-sensitive on Linux.
+- The **Compare** action requires a diff tool — either the one you configure, or one of the
+  auto-detected tools above installed on the machine.
+- Automated tests cover the core library (`HashCompare.Core`); the UI has no automated tests.
