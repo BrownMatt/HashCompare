@@ -1,5 +1,7 @@
 # HashCompare
 
+[![CI](https://github.com/BrownMatt/HashCompare/actions/workflows/ci.yml/badge.svg)](https://github.com/BrownMatt/HashCompare/actions/workflows/ci.yml)
+
 A cross-platform desktop app (Windows, macOS, Linux) for comparing the contents of two folders by **SHA256 hash**, so you
 can verify backups, copies, and migrations with byte-level confidence instead of trusting
 file sizes or timestamps. Each result row offers one-click actions to reconcile the two
@@ -164,3 +166,5 @@ and destination; tick the ones you want and choose **Exclude selected** to appen
 - The **Compare** action requires a diff tool — either the one you configure, or one of the
   auto-detected tools above installed on the machine.
 - Automated tests cover the core library (`HashCompare.Core`); the UI has no automated tests.
+  CI builds and runs the tests on Windows, macOS, and Linux for every push to `master` and
+  every pull request.
