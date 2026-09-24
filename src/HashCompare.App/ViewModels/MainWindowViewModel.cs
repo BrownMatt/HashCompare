@@ -252,7 +252,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (!DiffToolLauncher.TryLaunch(_config, result.SourceFullPath, result.DestFullPath))
         {
-            var message = $"No diff tool was found. Configure one under Config, or install WinMerge or VS Code.\n\nSource: {result.SourceFullPath}\nDestination: {result.DestFullPath}";
+            var message = $"No diff tool could be started. Configure one under Config, or install WinMerge (Windows), Meld, or VS Code.\n\nSource: {result.SourceFullPath}\nDestination: {result.DestFullPath}";
             Task.Run(async () => await _dialogs.ShowInfoAsync("Compare", message));
         }
     }

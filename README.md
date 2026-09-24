@@ -123,9 +123,13 @@ corrupted, the app falls back to defaults rather than failing to start.
 
 - **Diff tool path** — full path to the executable used by the row **Compare** action
   (use **Browse…** to select it). Leave **blank** to auto-detect one:
-  - **Windows**: WinMerge (in `Program Files`), then VS Code (`code` on `PATH`)
-  - **macOS / Linux**: Meld (`/usr/bin/meld` or `/usr/local/bin/meld`), then VS Code
-    (`code` on `PATH`)
+  - **Windows**: WinMerge (in `Program Files` or a per-user install), then VS Code (`code` on
+    `PATH`)
+  - **macOS**: Meld, then VS Code (on `PATH`, in Homebrew's `/opt/homebrew/bin` or
+    `/usr/local/bin`, or in `/Applications`), then `opendiff` (requires Xcode)
+  - **Linux**: Meld, then VS Code (on `PATH`, `/usr/bin`, `/usr/local/bin`, or `/snap/bin`)
+
+  VS Code is opened in diff mode (`--diff`) automatically.
 - **Diff tool arguments** — the argument template passed to the tool. The tokens `{left}` and
   `{right}` are replaced with the source and destination file paths.
   - WinMerge example: `"{left}" "{right}"`
